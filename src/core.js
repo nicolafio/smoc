@@ -6,7 +6,11 @@ function middle(x, y) {
     return (x + y) / 2;
 }
 
-var 
+var isPhone = isPhone = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+dev.element.get(document.body).css('overflow', 'hidden');
+
+var
     // settings
 
     background = dev.color('#fff'),
@@ -15,9 +19,9 @@ var
 
     effects = dev.color('#00caff'),
 
-    viewWidth = 1000,
+    viewWidth = isPhone ? window.innerWidth : 1000,
 
-    viewHeight = 720,
+    viewHeight = isPhone ? window.innerHeight : 720,
 
     // styles
 
@@ -62,16 +66,18 @@ var
     },
 
     createKeyBindingsInfo = function () {
+        if (isPhone) return dev.div();
         return dev.div([
-            dev.div(dev.i('keys')),
+            dev.div(dev.i('How to play')).css('padding-bottom', '5px'),
             dev.div([
-                dev.div([dev.b('W'), ' = move up']),
-                dev.div([dev.b('S'), ' = move down']),
-                dev.div([dev.b('A'), ' = move left']),
-                dev.div([dev.b('D'), ' = move right']),
-                dev.div([dev.b('Q'), ' = rotate clockwise']),
-                dev.div([dev.b('E'), ' = rotate counterclockwise']),
-                dev.div([dev.b('P'), ' = toggle pause'])
+                dev.div([dev.b('W'), ' → Move up']),
+                dev.div([dev.b('A'), ' → Move left']),
+                dev.div([dev.b('S'), ' → Move down']),
+                dev.div([dev.b('D'), ' → Move right']),
+                dev.div([dev.b('Q'), ' → Rotate clockwise']),
+                dev.div([dev.b('E'), ' → Rotate anticlockwise']),
+                dev.div([dev.b('P'), ' → Pause']),
+                dev.div(dev.i('You can use your mouse to aim enemies.'))
             ]).css({
                 textAlign: 'left'
             })
@@ -92,7 +98,7 @@ var
             position: 'relative',
             top: dev.dynamicValue(function () {
                 dev.element.get(window).on('resize', (function () {
-                    this.value(innerHeight / 2- 360 + 'px');
+                    this.value(innerHeight / 2- viewHeight / 2 + 'px');
                 }).bind(this)).trigger('resize');
             }),
             margin: 'auto',
@@ -100,7 +106,10 @@ var
             height:  viewHeight + 'px',
             background: 'radial-gradient(circle 2000px at 50% 50%, ' + background + ', ' + shadowColor.clone().a(0.2) + ')',
             color: foreground,
-            boxShadow: 'inset 0 0 0 1px ' + shadowColor,
+            boxShadow:
+                isPhone ?
+                'none' :
+                'inset 0 0 0 1px ' + shadowColor,
             overflow: 'hidden'
         });
     }).appendTo(
@@ -122,47 +131,51 @@ var
     }).appendTo(gameWrapper),
 
     mainMenu = dev.div([
-        dev.div(function () {
-            this.css({
-                padding: '80px 0',
-                fontSize: '40px',
-                userSelect: 'none'
-            }).add('SMOC');
+        dev.div('SMOC').css({
+            paddingTop: '80px',
+            fontSize: '40px',
+            userSelect: 'none'
         }),
+        dev.div('REPURPOSED').css({
+            paddingBottom: '80px',
+            userSelect: 'none'
+        }),
+        isPhone ?
+        dev.div('The game is meant to be played on a computer with a keyboard and a mouse. Unfortunately phones are not supported.') :
         createMenu([
             [
-                'play',
+                'Play',
                 function () {
-                    
+
                     mainMenu.remove();
                     var origin = [viewWidth / 2, viewHeight / 2],
                         viewRect = [[0, 0], viewWidth, viewHeight],
-                        
+
                         destroyIfOutOfView = function () {
                             if (!joy.utils.pointInRect(this.position(), viewRect)) {
                                 this.destroy();
                                 return false;
                             }
                         },
-                        
+
                         buffsTime = 10000,
                         buffsBarWidth = 300,
                         buffs = [
-                            "chaseEnemies",
-                            "doubleDamage",
-                            "halfCoolDown",
-                            "tripleFire",
-                            "slowDownEnemies",
-                            "bouncingBullets",
-                            "doubleFire"
+                            "Follow Enemies",
+                            "Double Damage",
+                            "Rapid Fire",
+                            "Triple Fire",
+                            "Slow Enemies",
+                            "Bouncing Bullets",
+                            "Double Fire"
                         ],
 
                         gameOver = (function () {
                             var gameOverMenu = dev.centered([
-                                    dev.div(dev.b('game over')).css('padding', '20px'),
+                                    dev.div(dev.b('Game Over')).css('padding', '20px'),
                                     createMenu([
                                         [
-                                            'restart',
+                                            'Try again',
                                             function () {
                                                 gameOverMenu.remove();
                                                 var ind = game.length,
@@ -170,6 +183,7 @@ var
                                                 loop: while (ind--) {
                                                     object = game[ind];
                                                     if (object === camera) continue;
+                                                    if (object === pointer) continue;
                                                     for (player of players)
                                                         if (player === object)
                                                             continue loop;
@@ -179,13 +193,14 @@ var
                                                 for (player of players) player.position(camera.position());
                                                 view.css({
                                                     webkitFilter: null,
-                                                    opacity: null
+                                                    opacity: null,
+                                                    cursor: 'none'
                                                 });
                                                 time.start();
                                             }
                                         ],
                                         [
-                                            'return to main menu',
+                                            'Back to main menu',
                                             function () {
                                                 view.remove();
                                                 game.destroy();
@@ -200,7 +215,8 @@ var
                                 time.stop();
                                 view.css({
                                     webkitFilter: 'blur(10px)',
-                                    opacity: 0.5
+                                    opacity: 0.5,
+                                    cursor: 'default'
                                 });
                                 hud.add(gameOverMenu);
                             };
@@ -212,13 +228,13 @@ var
                                     dev.div(dev.b('pause')).css('padding', '20px'),
                                     createMenu([
                                         [
-                                            'resume',
+                                            'Resume',
                                             function () {
                                                 togglePause();
                                             }
                                         ],
                                         [
-                                            'return to main menu',
+                                            'Back to main menu',
                                             function () {
                                                 view.remove();
                                                 game.destroy();
@@ -253,7 +269,7 @@ var
                         })(),
 
                         enemies = dev.collection(),
-                        
+
                         players = dev.collection(),
 
                         game = joy.dynamicObject(function () {
@@ -333,7 +349,7 @@ var
                                         speed = minEnemySpeed + enemySpeedRangeSize * Math.random(),
                                         enemy = (
                                             joy.dynamicObject()
-                                                .update(function (deltaTime) { this.forward(deltaTime * speed * (buffTimes.slowDownEnemies.value() ? 0.2 : 1)); })
+                                                .update(function (deltaTime) { this.forward(deltaTime * speed * (buffTimes["Slow Enemies"].value() ? 0.2 : 1)); })
                                                 .update(enemyUpdateListener)
                                                 .add(
                                                     joy.circle(function () {
@@ -399,8 +415,8 @@ var
                                 recordSpan = dev.span('0'),
                                 record = 0,
                                 div = dev.div([
-                                    'score: ', scoreSpan,
-                                    'record: ', recordSpan
+                                    'Score: ', scoreSpan,
+                                    'Record: ', recordSpan
                                 ]);
                             game.destroy(function () {
                                 div.remove();
@@ -456,13 +472,33 @@ var
                         camera = joy.camera().update(function () {
                             this.drawView();
                         }).position(origin).appendTo(game),
-                        
-                        view = camera.view().css('cursor', 'default').applyBehaviour(function () {
+
+                        pointer = joy.dynamicObject(function () {
+                            const shape = joy.shape().stroke(foreground);
+                            this.appendTo(game)
+                                .position([viewWidth / 2, viewHeight / 2])
+                                .add(joy.circle(1).background(foreground))
+                                .add(shape)
+                                .update(function (deltaTime) {
+                                    const distance = this.distanceTo(players[0]);
+                                    const x = 15 + 5 * Math.pow(distance, 1.5) / viewWidth;
+                                    const y = x - 10;
+                                    this.rotate(0.001 * deltaTime);
+                                    shape.path([
+                                        [x, 0, y, 0],
+                                        [-x, 0, -y, 0],
+                                        [0, x, 0, y],
+                                        [0, -x, 0, -y]
+                                    ]);
+                                });
+                        })
+
+                        view = camera.view().css('cursor', 'none').applyBehaviour(function () {
                             var element = this.element();
                             element.width = viewWidth;
                             element.height = viewHeight;
                         }).appendTo(gameWrapper),
-                        
+
                         spawnPlayer = (function () {
                             var moveListener = function () {
                                     var position = this.position(),
@@ -471,7 +507,7 @@ var
                                     if (x < 0) this.position([x = 0, y]);
                                     if (y < 0) this.position([x, y = 0]);
                                     if (x > viewWidth) this.position([viewWidth, y]);
-                                    if (y > viewHeight) this.position([x, viewHeight]);  
+                                    if (y > viewHeight) this.position([x, viewHeight]);
                                 },
                                 playerSpeed = 0.3;
                             return function (up, down, left, right, clockwise, counterClockwise) {
@@ -515,7 +551,7 @@ var
                                                 bulletUpdateListener = function (deltaTime) {
                                                     this.forward(deltaTime * bulletSpeed);
                                                     var enemy;
-                                                    if (buffTimes.chaseEnemies.value()) {
+                                                    if (buffTimes["Follow Enemies"].value()) {
                                                         var closestEnemyDistance = Infinity,
                                                             closestEnemy,
                                                             distance;
@@ -528,20 +564,36 @@ var
                                                         }
                                                         if (closestEnemy) {
                                                             this.rotate(
-                                                                (closestEnemy.relativeTo(this)[1] > 0 ? 1 : -1) * 
-                                                                deltaTime * 
+                                                                (closestEnemy.relativeTo(this)[1] > 0 ? 1 : -1) *
+                                                                deltaTime *
                                                                 bulletChaseRotationSpeed
                                                             );
                                                         }
                                                     }
-                                                    for (enemy of enemies)
+                                                    [...enemies].forEach((enemy) => {
                                                         if (this.collidesWith(enemy)) {
+                                                            const explosionCircle = joy.circle().background(foreground.clone().a(0.2));
+                                                            joy.dynamicObject()
+                                                                .appendTo(game)
+                                                                .position(this.position())
+                                                                .add(explosionCircle)
+                                                                .update(function (deltaTime) {
+                                                                    const r = (explosionCircle.radius() || 0) + 0.1 * deltaTime;
+                                                                    const a = Math.max(explosionCircle.background().a() - 0.0005 * deltaTime, 0);
+                                                                    if (a === 0) this.destroy();
+                                                                    else {
+                                                                        explosionCircle
+                                                                            .radius(r)
+                                                                            .background().a(a);
+                                                                    }
+                                                                });
                                                             this.destroy();
                                                             enemy.hit();
-                                                            if (buffTimes.doubleDamage.value()) enemy.hit();
+                                                            if (buffTimes["Double Damage"].value()) enemy.hit();
                                                         }
+                                                    });
                                                     if (!joy.utils.pointInRect(this.position(), viewRect)) {
-                                                        if (buffTimes.bouncingBullets.value()) {
+                                                        if (buffTimes["Bouncing Bullets"].value()) {
                                                             var transformation = this.transformation(),
                                                                 x = transformation[0],
                                                                 y = transformation[1],
@@ -567,10 +619,10 @@ var
                                                         -3, 0,
                                                         3, 0
                                                     ], function () {
-                                                        var normal = dev.color(foreground).a(0.5),
+                                                        var normal = dev.color(foreground).a(0.7),
                                                             bold = foreground;
                                                         this.stroke(normal);
-                                                        buffTimes.doubleDamage.value((function (value) {
+                                                        buffTimes["Double Damage"].value((function (value) {
                                                             this.stroke(value ? bold : normal);
                                                         }).bind(this));
                                                     })
@@ -595,11 +647,11 @@ var
                                             this.update(function (deltaTime) {
                                                 coolDown -= deltaTime;
                                                 if (coolDown < 0) {
-                                                    coolDown += coolDownTime * (buffTimes.halfCoolDown.value() ? 0.5 : 1);
-                                                    var ind = buffTimes.tripleFire.value() ? 3 : 1,
+                                                    coolDown += coolDownTime * (buffTimes["Rapid Fire"].value() ? 0.5 : 1);
+                                                    var ind = buffTimes["Triple Fire"].value() ? 3 : 1,
                                                         bullet;
                                                     while (ind--) {
-                                                        var handler = buffTimes.doubleFire.value(),
+                                                        var handler = buffTimes["Double Fire"].value(),
                                                             ind1 = handler ? 2 : 1;
                                                         while (ind1--) {
                                                             bullet = (
@@ -638,17 +690,40 @@ var
                                 }));
                             };
                         })(),
-                        
+
                         time = dev.animationFrameLoop().update(
                             game.update.bind(game)
                         ).start();
-                        
+
                     spawnPlayer('W', 'S', 'A', 'D', 'E', 'Q');
-                        
+
+                    var firstPlayer = players[0],
+                    	cameraView = camera.view();
+
+                    cameraView.on('mousemove', onmousemove);
+
+                    function onmousemove (event) {
+                        const rect = cameraView.rect();
+                        const pos = camera.pointInSpace([event.clientX - rect.left, event.clientY - rect.top]);
+                        firstPlayer[0].aim(pos);
+                        pointer.position(pos);
+                    }
+
+                    firstPlayer.destroy(function () {
+                    	cameraView.off("mousemove", onmousemove);
+                    });
+
                 }
             ],
+            /*
             [
-                'about',
+                'Paragraphs',
+                () => {
+                    // WIP
+                }
+            ],*/
+            [
+                'Info',
                 (function () {
                     var about = dev.centered(
                             dev.inline().css({
@@ -656,13 +731,14 @@ var
                                 textAlign: 'left'
                             }).add(
                                 dev.div('SMOC').css('fontSize', '25px'),
+                                dev.div('REPURPOSED'),
                                 dev.div().css('padding', '20px 0').add(
                                     dev.div(['Game developed by ', dev.b('Nicola Fiori'), '.']),
-                                    dev.div(['Built with ', dev.b('HTML5'), ' and ', dev.b(['javascript']), ',']),
-                                    dev.div(['on top of ', dev.b('Joy2D game engine'), ' and ', dev.b('Deviser.js library'), '.'])
+                                    dev.div(['Using ', dev.b('HTML5'), ' and ', dev.b(['javascript']), ',']),
+                                    dev.div(['based on the ', dev.b('game engine Joy2D'), ' and the ', dev.b('Deviser.js library'), '.'])
                                 ),
                                 dev.right(
-                                    dev.inline('main menu', buttonBehaviour).click(function () {
+                                    dev.inline('Main menu', buttonBehaviour).click(function () {
                                         about.replaceWith(mainMenu);
                                     }).css('padding', '5px')
                                 )
@@ -674,18 +750,23 @@ var
         ]).css('pointerEvents', 'all'),
         createKeyBindingsInfo()
     ]);
-gameWrapper.add(
-    // run intro
-    dev.canvas2D(function () {
-        var element = this.element();
-        element.width = viewHeight;
-        element.height = viewHeight;
-        runIntro(this.context(), (function () {
-            setTimeout((function () {
-                // intro finished, show main menu
-                this.remove();
-                hud.add(mainMenu);
-            }).bind(this), 1000);
-        }).bind(this));
-    })
-);
+if (isPhone) {
+    hud.add(mainMenu);
+}
+else {
+    gameWrapper.add(
+        // run intro
+        dev.canvas2D(function () {
+            var element = this.element();
+            element.width = viewHeight;
+            element.height = viewHeight;
+            runIntro(this.context(), (function () {
+                setTimeout((function () {
+                    // intro finished, show main menu
+                    this.remove();
+                    hud.add(mainMenu);
+                }).bind(this), 1000);
+            }).bind(this));
+        })
+    );
+}
