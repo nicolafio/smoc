@@ -70,13 +70,13 @@ var
         return dev.div([
             dev.div(dev.i('How to play')).css('padding-bottom', '5px'),
             dev.div([
-                dev.div([dev.b('W'), ' → Move up']),
-                dev.div([dev.b('A'), ' → Move left']),
-                dev.div([dev.b('S'), ' → Move down']),
-                dev.div([dev.b('D'), ' → Move right']),
-                dev.div([dev.b('Q'), ' → Rotate clockwise']),
-                dev.div([dev.b('E'), ' → Rotate anticlockwise']),
-                dev.div([dev.b('P'), ' → Pause']),
+                dev.div([dev.b('W'), ' / ', dev.b('↑'), ': Move up']),
+                dev.div([dev.b('A'), ' / ', dev.b('←'), ': Move left']),
+                dev.div([dev.b('S'), ' / ', dev.b('↓'), ': Move down']),
+                dev.div([dev.b('D'), ' / ', dev.b('→'), ': Move right']),
+                dev.div([dev.b('Q'), ': Rotate clockwise']),
+                dev.div([dev.b('E'), ': Rotate anticlockwise']),
+                dev.div([dev.b('P'), ': Pause']),
                 dev.div(dev.i('You can use your mouse to aim enemies.'))
             ]).css({
                 textAlign: 'left'
@@ -133,11 +133,8 @@ var
     mainMenu = dev.div([
         dev.div('SMOC').css({
             paddingTop: '80px',
-            fontSize: '40px',
-            userSelect: 'none'
-        }),
-        dev.div('REPURPOSED').css({
             paddingBottom: '80px',
+            fontSize: '40px',
             userSelect: 'none'
         }),
         isPhone ?
@@ -519,28 +516,29 @@ var
                                         ['leftward', down],
                                         ['rightward', up]
                                     ].forEach((function (item) {
-                                        var key = item[1].charCodeAt(0),
-                                            move = (
-                                                dev.animationFrameLoop()
-                                                    .update((function (deltaTime) {
-                                                        this[item[0]](deltaTime * playerSpeed);
-                                                    }).bind(this))
-                                                    .update(moveListener.bind(this))
-                                            );
-                                        dev.element.get(window)
-                                            .on('keydown', onkeydown)
-                                            .on('keyup', onkeyup);
-                                        this.destroy(function () {
+                                        item[1].forEach((function (key) {
+                                            var move = (
+                                                    dev.animationFrameLoop()
+                                                        .update((function (deltaTime) {
+                                                            this[item[0]](deltaTime * playerSpeed);
+                                                        }).bind(this))
+                                                        .update(moveListener.bind(this))
+                                                );
                                             dev.element.get(window)
-                                                .off('keydown', onkeydown)
-                                                .off('keyup', onkeyup);
-                                        });
-                                        function onkeydown(event) {
-                                            if (event.which === key) move.start();
-                                        }
-                                        function onkeyup(event) {
-                                            if (event.which === key) move.stop();
-                                        }
+                                                .on('keydown', onkeydown)
+                                                .on('keyup', onkeyup);
+                                            this.destroy(function () {
+                                                dev.element.get(window)
+                                                    .off('keydown', onkeydown)
+                                                    .off('keyup', onkeyup);
+                                            });
+                                            function onkeydown(event) {
+                                                if (event.key === key) move.start();
+                                            }
+                                            function onkeyup(event) {
+                                                if (event.key === key) move.stop();
+                                            }
+                                        }).bind(this))
                                     }).bind(this));
                                     this.position(camera.position()).add(
                                         joy.dynamicObject(function () {
@@ -632,17 +630,18 @@ var
                                                 [clockwise, 1],
                                                 [counterClockwise, -1]
                                             ].forEach((function (item) {
-                                                var key = item[0].charCodeAt(0),
-                                                    rotate = dev.animationFrameLoop().update((function (deltaTime) {
-                                                        this.rotate(item[1] * deltaTime * rotationSpeed);
-                                                    }).bind(this));
-                                                dev.element.get(window)
-                                                    .on('keydown', function (event) {
-                                                        if (event.which === key) rotate.start();
-                                                    })
-                                                    .on('keyup', function (event) {
-                                                        if (event.which === key) rotate.stop();
-                                                    });
+                                                item[0].forEach((function (key) {
+                                                    var rotate = dev.animationFrameLoop().update((function (deltaTime) {
+                                                            this.rotate(item[1] * deltaTime * rotationSpeed);
+                                                        }).bind(this));
+                                                    dev.element.get(window)
+                                                        .on('keydown', function (event) {
+                                                            if (event.key === key) rotate.start();
+                                                        })
+                                                        .on('keyup', function (event) {
+                                                            if (event.key === key) rotate.stop();
+                                                        });
+                                                }).bind(this));
                                             }).bind(this));
                                             this.update(function (deltaTime) {
                                                 coolDown -= deltaTime;
@@ -695,7 +694,7 @@ var
                             game.update.bind(game)
                         ).start();
 
-                    spawnPlayer('W', 'S', 'A', 'D', 'E', 'Q');
+                    spawnPlayer(['w', 'ArrowUp'], ['s', 'ArrowDown'], ['a', 'ArrowLeft'], ['d', 'ArrowRight'], ['e'], ['q']);
 
                     var firstPlayer = players[0],
                     	cameraView = camera.view();
@@ -715,13 +714,6 @@ var
 
                 }
             ],
-            /*
-            [
-                'Paragraphs',
-                () => {
-                    // WIP
-                }
-            ],*/
             [
                 'Info',
                 (function () {
@@ -731,7 +723,6 @@ var
                                 textAlign: 'left'
                             }).add(
                                 dev.div('SMOC').css('fontSize', '25px'),
-                                dev.div('REPURPOSED'),
                                 dev.div().css('padding', '20px 0').add(
                                     dev.div(['Game developed by ', dev.b('Nicola Fiori'), '.']),
                                     dev.div(['Using ', dev.b('HTML5'), ' and ', dev.b(['javascript']), ',']),
