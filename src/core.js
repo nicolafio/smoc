@@ -470,27 +470,7 @@ var
                             this.drawView();
                         }).position(origin).appendTo(game),
 
-                        pointer = joy.dynamicObject(function () {
-                            const shape = joy.shape().stroke(foreground);
-                            this.appendTo(game)
-                                .position([viewWidth / 2, viewHeight / 2])
-                                .add(joy.circle(1).background(foreground))
-                                .add(shape)
-                                .update(function (deltaTime) {
-                                    const distance = this.distanceTo(players[0]);
-                                    const x = 15 + 5 * Math.pow(distance, 1.5) / viewWidth;
-                                    const y = x - 10;
-                                    this.rotate(0.001 * deltaTime);
-                                    shape.path([
-                                        [x, 0, y, 0],
-                                        [-x, 0, -y, 0],
-                                        [0, x, 0, y],
-                                        [0, -x, 0, -y]
-                                    ]);
-                                });
-                        })
-
-                        view = camera.view().css('cursor', 'none').applyBehaviour(function () {
+                        view = camera.view().applyBehaviour(function () {
                             var element = this.element();
                             element.width = viewWidth;
                             element.height = viewHeight;
@@ -705,7 +685,6 @@ var
                         const rect = cameraView.rect();
                         const pos = camera.pointInSpace([event.clientX - rect.left, event.clientY - rect.top]);
                         firstPlayer[0].aim(pos);
-                        pointer.position(pos);
                     }
 
                     firstPlayer.destroy(function () {
