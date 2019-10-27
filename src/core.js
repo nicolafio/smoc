@@ -180,7 +180,6 @@ var
                                                 loop: while (ind--) {
                                                     object = game[ind];
                                                     if (object === camera) continue;
-                                                    if (object === pointer) continue;
                                                     for (player of players)
                                                         if (player === object)
                                                             continue loop;
